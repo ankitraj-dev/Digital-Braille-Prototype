@@ -21,12 +21,11 @@
 
 ### Computer Requirements
 - **Windows or Mac computer** (Chromebook possible with web-based editor)
-- **Arduino IDE** (installed version or web-based editor)  
-  - [Video: Arduino IDE Comparison](#)  
+- **Arduino IDE** (installed version or web-based editor)    
 - **USB port**  
   - Arduino uses USB-C → USB-A to C cable included in Science Buddies kit  
   - Adapter or alternative cable may be required if computer has only USB-C ports  
-  - [Video: Cable & Adapter Types](#)
+  - [Video: Cable & Adapter Types](https://youtu.be/SBLFBsbbKa8)
 
 ### Craft / Mechanical Parts
 - Double-sided tape or hot glue (to hold solenoids together)
