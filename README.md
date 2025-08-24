@@ -4,6 +4,27 @@
 This project is an open-source, low-cost prototype of a refreshable braille display. It utilizes an Arduino microcontroller and a custom-designed array of solenoids to actuate a single braille cell. The display can be programmed to translate and present text characters into their corresponding braille patterns. This project aims to demonstrate an accessible and economical alternative to the expensive refreshable braille displays currently on the market, which typically use piezoelectric actuators.
 
 ---
+# IHMMC Challenge Submission
+
+This project was our team's submission for the [Innovative Hardware Model Making Competition (IHMMC)](https://www.aechardwareclub.in/), a flagship event of the Asansol Engineering College Hardware Club.  
+
+The competition encourages participants to design and build original hardware or hardware-software models. Our project was required to be an original creation and was evaluated based on:  
+- Creativity  
+- Functionality  
+- Aesthetics  
+- A 5-minute presentation  
+
+The event is internationally recognized and has attracted over 1100 participants.
+
+## Team Members
+- Ankit Raj  
+- Aastha Baranwal  
+- Abhinav Burnwal  
+- Barsa
+- Manish
+- Aryan Biswas
+
+---
 
 ### **Motivation**
 The primary motivation for this project is to address the high cost of existing refreshable braille technology. By using readily available and inexpensive components, such as solenoids, we can create a functional prototype that can serve as a foundation for more affordable assistive technology. This makes the project ideal for students, hobbyists, and researchers interested in building accessible hardware solutions.
