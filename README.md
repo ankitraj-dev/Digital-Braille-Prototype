@@ -20,8 +20,8 @@ The event is internationally recognized and has attracted over 1100 participants
 - Ankit Raj  
 - Aastha Baranwal  
 - Abhinav Burnwal  
-- Barsa
-- Manish
+- Barsa Shaw
+- Manish Kumar Sharma
 - Aryan Biswas
 
 ---
