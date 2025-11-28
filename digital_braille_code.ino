@@ -1,115 +1,141 @@
-// Braille character mapping (6-dot representation)
-int braille[26][6] = {
-  {1,0,0,0,0,0},  {1,1,0,0,0,0},  {1,0,0,1,0,0},  {1,0,0,1,1,0},  {1,0,0,0,1,0},
-  {1,1,0,1,0,0},  {1,1,0,1,1,0},  {1,1,0,0,1,0},  {0,1,0,1,0,0},  {0,1,0,1,1,0},
-  {1,0,1,0,0,0},  {1,1,1,0,0,0},  {1,0,1,1,0,0},  {1,0,1,1,1,0},  {1,0,1,0,1,0},
-  {1,1,1,1,0,0},  {1,1,1,1,1,0},  {1,1,1,0,1,0},  {0,1,1,1,0,0},  {0,1,1,1,1,0},
-  {1,0,1,0,0,1},  {1,1,1,0,0,1},  {0,1,0,1,1,1},  {1,0,1,1,0,1},  {1,0,1,1,1,1},
-  {1,0,1,0,1,1}
+#include <BluetoothSerial.h>
+BluetoothSerial SerialBT;
+
+// --- Pin mapping (Standard Braille: 1-2-3 left, 4-5-6 right) ---
+int dots[6] = {16, 14, 26, 13, 27, 25};
+
+// --- Braille patterns for a–z ---
+bool braille[][6] = {
+  {1,0,0,0,0,0}, // a
+  {1,1,0,0,0,0}, // b
+  {1,0,0,1,0,0}, // c
+  {1,0,0,1,1,0}, // d
+  {1,0,0,0,1,0}, // e
+  {1,1,0,1,0,0}, // f
+  {1,1,0,1,1,0}, // g
+  {1,1,0,0,1,0}, // h
+  {0,1,0,1,0,0}, // i
+  {0,1,0,1,1,0}, // j
+  {1,0,1,0,0,0}, // k
+  {1,1,1,0,0,0}, // l
+  {1,0,1,1,0,0}, // m
+  {1,0,1,1,1,0}, // n
+  {1,0,1,0,1,0}, // o
+  {1,1,1,1,0,0}, // p
+  {1,1,1,1,1,0}, // q
+  {1,1,1,0,1,0}, // r
+  {0,1,1,1,0,0}, // s
+  {0,1,1,1,1,0}, // t
+  {1,0,1,0,0,1}, // u
+  {1,1,1,0,0,1}, // v
+  {0,1,0,1,1,1}, // w
+  {1,0,1,1,0,1}, // x
+  {1,0,1,1,1,1}, // y
+  {1,0,1,0,1,1}  // z
 };
 
-// Arduino pins connected to solenoids
-int controlPins[6] = {2,3,4,5,6,7};
+// --- Timing constants ---
+const unsigned long LETTER_HOLD_MS   = 2000; // letter stays ON
+const unsigned long LETTER_GAP_MS    = 300;  // short blank gap
+const unsigned long SPACE_PAUSE_MS   = 3000; // space pause
 
-// Button to advance letters (Already fixed in your circuit)
-int buttonPin = 8;
+// --- State machine variables ---
+enum State { IDLE, LETTER_ON, LETTER_OFF, SPACE_PAUSE };
+State state = IDLE;
 
-// Reset button
-int resetPin = 9;
+String text = "";
+int letterIndex = 0;
+unsigned long stateStart = 0;
 
-// Text to display in Braille
-String text = "i am Ankit raj";  // Includes spaces
-
-// Variable to track current letter index
-int currentIndex = 0;
-
-// Length of the text
-int length = text.length();
-
-void setup(){
-  Serial.begin(9600);
-
-  // Set solenoid control pins as outputs
-  for(int i = 0; i < 6; i++){
-    pinMode(controlPins[i], OUTPUT);
-  }
-
-  // Set buttons as inputs with pull-up resistors
-  pinMode(buttonPin, INPUT_PULLUP);
-  pinMode(resetPin, INPUT_PULLUP);
+void allOff() {
+  for (int i = 0; i < 6; i++) digitalWrite(dots[i], LOW);
 }
 
-void loop(){
-  // If reset button is pressed, restart from first letter
-  if (digitalRead(resetPin) == LOW) {  
-    Serial.println("Resetting...");
-    delay(500);  // Debounce
-    currentIndex = 0;  // Start from first letter
+void showLetter(char c) {
+  allOff();
+  if (c < 'a' || c > 'z') return;
+  int id = c - 'a';
+  for (int i = 0; i < 6; i++) digitalWrite(dots[i], braille[id][i] ? HIGH : LOW);
 
-    // Turn OFF all solenoids
-    for (int k = 0; k < 6; k++) {
-      digitalWrite(controlPins[k], LOW);
+  Serial.print("Letter: ");
+  Serial.println(c);
+}
+
+// --- Setup ---
+void setup() {
+  Serial.begin(115200);
+  SerialBT.begin("Braille_Display");
+  for (int i = 0; i < 6; i++) {
+    pinMode(dots[i], OUTPUT);
+    digitalWrite(dots[i], LOW);
+  }
+  Serial.println("✅ Ready. Send text via Bluetooth.");
+}
+
+// --- Main loop ---
+void loop() {
+  // --- 1️⃣ Handle incoming text immediately ---
+  if (SerialBT.available()) {
+    String incoming = "";
+    while (SerialBT.available()) {
+      incoming += (char)SerialBT.read();
+      delay(2);
     }
+    incoming.trim();
+    incoming.toLowerCase();
 
-    // Wait until reset button is released to prevent accidental multiple resets
-    while (digitalRead(resetPin) == LOW);
-    delay(500);  // Debounce
-
-    return;  // Immediately restart loop() to apply reset
-  }
-
-  // Ensure it loops through full text, no skipping
-  if (currentIndex >= length) {
-    Serial.println("End of text. Waiting for restart...");
-
-    // Wait for button press before restarting
-    while (digitalRead(buttonPin) == HIGH);
-    delay(500);  // Debounce
-
-    currentIndex = 0;  // Restart the loop after completing full text
-    return;
-  }
-
-  // Get the current character
-  char letter = text[currentIndex];
-
-  // Handle spaces
-  if (letter == ' ') {
-    Serial.println("Space detected. Waiting...");
-
-    // Turn ON all solenoids (simulating a pause)
-    for (int k = 0; k < 6; k++) {
-      digitalWrite(controlPins[k], HIGH);
+    if (incoming.length() > 0) {
+      Serial.print("📨 New text received: ");
+      Serial.println(incoming);
+      text = incoming;
+      letterIndex = 0;
+      state = IDLE;
+      allOff();
     }
-
-    // Wait for button press before moving on
-    while (digitalRead(buttonPin) == LOW);
-    delay(1000);  // Debounce
-
-    // Move to the next letter after space pause
-    currentIndex++;
-    return;  // Skip the normal letter processing
   }
 
-  // Convert letter to Braille index
-  int index = tolower(letter) - 'a';  
+  // --- 2️⃣ State machine ---
+  unsigned long now = millis();
 
-  // Print for debugging
-  Serial.print("Displaying: ");
-  Serial.print(letter);
-  Serial.print(" (Index: ");
-  Serial.print(index);
-  Serial.println(")");
+  switch (state) {
+    case IDLE:
+      if (text.length() > 0 && letterIndex < text.length()) {
+        char c = text[letterIndex];
+        if (c == ' ') {
+          Serial.println("[Space]");
+          allOff();
+          state = SPACE_PAUSE;
+          stateStart = now;
+        } else if (c >= 'a' && c <= 'z') {
+          showLetter(c);
+          state = LETTER_ON;
+          stateStart = now;
+        } else {
+          letterIndex++; // skip invalids
+        }
+      }
+      break;
 
-  // Activate solenoids
-  for (int k = 0; k < 6; k++) {
-    digitalWrite(controlPins[k], braille[index][k]);
+    case LETTER_ON:
+      if (now - stateStart >= LETTER_HOLD_MS) {
+        allOff();
+        state = LETTER_OFF;
+        stateStart = now;
+      }
+      break;
+
+    case LETTER_OFF:
+      if (now - stateStart >= LETTER_GAP_MS) {
+        letterIndex++;
+        state = IDLE; // move to next
+      }
+      break;
+
+    case SPACE_PAUSE:
+      if (now - stateStart >= SPACE_PAUSE_MS) {
+        letterIndex++;
+        state = IDLE;
+      }
+      break;
   }
-
-  // Wait for the advance button press before moving to next letter
-  while (digitalRead(buttonPin) == LOW);  // Wait for button press
-  delay(1000);  // Debounce
-  
-  // Move to the next letter
-  currentIndex++;  
 }
